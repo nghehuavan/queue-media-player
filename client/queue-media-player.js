@@ -11,12 +11,12 @@ class QueueMediaPlayer {
     };
     this.queue = [];
     this.onQueueShift = null;
+    this.queueWaiting = null;
     this.totalDuration = 0;
     this.mediaSource = null;
     this.sourceBuffer = null;
     this.video = document.querySelector(videoSelector);
     this.mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
-    this.inittialMediaSource();
   }
 
   inittialMediaSource = () => {
@@ -30,21 +30,32 @@ class QueueMediaPlayer {
 
   addQueue = (arr) => {
     this.queue.push(...arr);
+
+    console.log(this.queueWaiting);
+    if (this.queueWaiting) {
+      this.appendNextQueue();
+    }
+  };
+
+  clearQueue = () => {
+    this.queue = [];
   };
 
   play = async () => {
+    this.inittialMediaSource();
     if (this.queue.length > 0) {
       this.video.ontimeupdate = (e) => {
-        console.log(this.video.buffered.start(0));
-        console.log(this.video.buffered.end(0));
         // listen video playing time and get next video when remaining < 10s
         const remaining = this.totalDuration - this.video.currentTime;
+        this.queueWaiting = remaining <= 0;
         if (remaining < this.config.nextAt) {
           this.appendNextQueue();
         }
       };
+
       // append first video for start
-      await this.appendNextQueue(true);
+      this.appendNextQueue(true);
+
       // play video;
       this.video.play();
     }

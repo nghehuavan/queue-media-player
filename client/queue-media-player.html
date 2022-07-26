@@ -47,6 +47,17 @@
       </td>
     </tr>
     <tr>
+      <td>
+        <div id="video-duration">duration: 00:00:00</div>
+        <div>
+          <button onclick="pauseAddQueue()">Pause add queue</button>
+          <button onclick="resumeAddQueue()">Resume add queue</button>
+        </div>
+      </td>
+      <td>
+      </td>
+    </tr>
+    <tr>
       <td colspan="2" align="center">
         <button onclick="playTogether()">Play</button>
       </td>
@@ -71,29 +82,38 @@
       baseURL + 'ytb012.mp4',
     ];
 
+    const player = new QueueMediaPlayer('#videoBuffer');
     function playTogether() {
-      const player = new QueueMediaPlayer('#videoBuffer');
       player.addQueue(assets);
-      player.onQueueShift = (queue) => {
-        if (queue.length < 2)
-          player.addQueue(assets);
-      };
+      player.onQueueShift = infinityAddQueue;
       player.play();
 
       const videoNormal = document.querySelector('#videoNormal');
       videoNormal.play();
     }
 
-    function secondsToTime(e) {
-      const h = Math.floor(e / 3600).toString().padStart(2, '0'),
-        m = Math.floor(e % 3600 / 60).toString().padStart(2, '0'),
-        s = Math.floor(e % 60).toString().padStart(2, '0');
+    function infinityAddQueue(queue) {
+      if (queue.length < 2)
+        console.log('infinityAddQueue')
+      player.addQueue(assets);
+    }
 
-      return h + ':' + m + ':' + s;
+    function pauseAddQueue() {
+      player.onQueueShift = null;
+      player.clearQueue();
+    }
+
+    function resumeAddQueue() {
+      player.onQueueShift = infinityAddQueue;
+      player.addQueue(assets);
     }
 
     // display js memory size
     setInterval(async function () {
+      if (player?.totalDuration) {
+        document.getElementById('video-duration').innerText = "duration: " + secondsToTime(player?.totalDuration);
+      }
+
       if (window.performance.memory) {
         document.getElementById('memory_usage').innerText = "jsHeapSizeLimit: "
           + Math.round(window.performance.memory?.jsHeapSizeLimit / (1024 * 1024)) + "MB\n" +
@@ -101,6 +121,14 @@
           "usedJSHeapSize:  " + Math.round(window.performance.memory?.usedJSHeapSize / (1024 * 1024)) + "MB";
       }
     }, 1000);
+
+    function secondsToTime(e) {
+      const h = Math.floor(e / 3600).toString().padStart(2, '0'),
+        m = Math.floor(e % 3600 / 60).toString().padStart(2, '0'),
+        s = Math.floor(e % 60).toString().padStart(2, '0');
+      return h + ':' + m + ':' + s;
+    }
+
   </script>
 </body>
 

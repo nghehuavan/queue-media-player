@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+</head>
+
+<body>
+  <div>
+    [MediaSource] only supports fragmented MP4 videos (<a href="./mp4box/index.html"> check fragmented video) </a>)
+  </div>
+  <video id="videoBuffer" controls autoplay muted width="400" height="300"></video>
+  <video id="videoNormal" controls autoplay muted width="400" height="300"
+    src="https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/frag/ytb.mp4" muted>
+  </video>
+
+  <div id="memory_usage"></div>
+  <script>
+    var video = document.querySelector('#videoBuffer');
+    var baseURL = 'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/frag/'
+    const assets = [
+      'ytb001.mp4',
+      'ytb002.mp4',
+      'ytb003.mp4',
+      'ytb004.mp4',
+      'ytb005.mp4',
+      'ytb006.mp4',
+      'ytb007.mp4',
+      'ytb008.mp4',
+      'ytb009.mp4',
+      'ytb010.mp4',
+      'ytb011.mp4',
+      'ytb012.mp4',
+    ];
+
+    var tmpQueue = []
+    tmpQueue.push(...assets);
+
+    var totalDuration = 0;
+    var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+    var mediaSource;
+    var sourceBuffer;
+    var vidClips = [];
+    var vidClipsWatcher;
+    vidClips.push(...assets);
+
+    if ('MediaSource' in window && MediaSource.isTypeSupported(mimeCodec)) {
+      mediaSource = new MediaSource;
+      video.src = URL.createObjectURL(mediaSource);
+      mediaSource.addEventListener('sourceopen', sourceOpen);
+      mediaSource.addEventListener('sourceended', function (e) { console.log('sourceended: ' + mediaSource.readyState); });
+      mediaSource.addEventListener('sourceclose', function (e) { console.log('sourceclose: ' + mediaSource.readyState); });
+      mediaSource.addEventListener('error', function (e) { console.log('sourceerror: ' + mediaSource.readyState); })
+
+    } else {
+      console.error('Unsupported MIME type or codec: ', mimeCodec);
+    }
+
+    async function sourceOpen(e) {
+      console.log('sourceopen: ' + mediaSource.readyState);
+      sourceBuffer = mediaSource.addSourceBuffer(mimeCodec);
+      sourceBuffer.mode = 'sequence';
+
+      sourceBuffer.addEventListener('updateend', async function (_) {
+        if (vidClips.length > 0) {
+          const buf = await fetchArrayBuffer(vidClips.shift());
+          sourceBuffer.appendBuffer(new Uint8Array(buf));
+        } else {
+          vidClipsWatcher = setInterval(async function () {
+            if (vidClips.length > 0) {
+              clearInterval(vidClipsWatcher);
+              const buf = await fetchArrayBuffer(vidClips.shift());
+              sourceBuffer.appendBuffer(new Uint8Array(buf));
+            }
+          }, 1000);
+        }
+      });
+
+      // append first video for start loop
+      const buf = await fetchArrayBuffer(vidClips.shift());
+      sourceBuffer.appendBuffer(new Uint8Array(buf));
+
+      video.ontimeupdate = function (e) {
+        // console.log(e)
+        // console.log(video.videoTracks, video.currentTime)
+        show_memory_usage();
+        if (totalDuration - video.currentTime < 10) {
+          getNextVidClips();
+        }
+      };
+    };
+
+    async function fetchArrayBuffer(vidUrl) {
+      console.log('arrayBuffer:', vidUrl)
+      const blob = await (await fetch(baseURL + vidUrl)).blob();
+      const duration = await getDuration(blob);
+      totalDuration += duration;
+      return blob.arrayBuffer();
+    }
+
+    function getNextVidClips() {
+      vidClips.push(tmpQueue.shift());
+      if (tmpQueue.length == 0) tmpQueue.push(...assets);
+    }
+
+    async function show_memory_usage() {
+      if (window.performance.memory) {
+        document.getElementById('memory_usage').innerText = "jsHeapSizeLimit: "
+          + Math.round(window.performance.memory?.jsHeapSizeLimit / (1024 * 1024)) + "MB\n" +
+          "totalJSHeapSize: " + Math.round(window.performance.memory?.totalJSHeapSize / (1024 * 1024)) + "MB\n" +
+          "usedJSHeapSize:  " + Math.round(window.performance.memory?.usedJSHeapSize / (1024 * 1024)) + "MB";
+      }
+    }
+
+    const getDuration = (blob) => {
+      return new Promise((res) => {
+        const tempVidElem = document.createElement('video');
+        tempVidElem.onloadedmetadata = () => {
+          res(tempVidElem.duration);
+          URL.revokeObjectURL(tempVidElem.src);
+        };
+        tempVidElem.src = URL.createObjectURL(blob);
+      });
+    };
+  </script>
+</body>
+
+</html>

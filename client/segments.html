@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>Page Title</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body>
+  <div>
+    [MediaSource] only supports fragmented MP4 videos (<a href="./mp4box/index.html"> check fragmented video) </a>)
+  </div>
+  <video id="videoBuffer" controls autoplay muted width="400" height="300"></video>
+  <video id="videoNormal" controls autoplay muted width="400" height="300"
+    src="https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/frag/ytb.mp4" muted>
+  </video>
+  <div id="memory_usage"></div>
+
+  <script src="./utils.js"></script>
+  <script>
+    (async () => {
+      const video = document.querySelector('#videoBuffer');
+      var baseURL = 'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/frag/'
+      const assets = [
+        'ytb001.mp4',
+        'ytb002.mp4',
+        'ytb003.mp4',
+        'ytb004.mp4',
+        'ytb005.mp4',
+        'ytb006.mp4',
+        'ytb007.mp4',
+        'ytb008.mp4',
+        'ytb009.mp4',
+        'ytb010.mp4',
+        'ytb011.mp4',
+        'ytb012.mp4',
+      ];
+
+      var totalDuration = 0;
+      var tmpQueue = []
+      tmpQueue.push(...assets);
+
+      const getClipBuff = async (vidUrl) => {
+        console.log('buffering video : ', baseURL + vidUrl);
+        const blob = await (await fetch(baseURL + vidUrl)).blob();
+        const duration = await getDuration(blob);
+        const buff = await blob.arrayBuffer();
+        console.log('duration', duration);
+        totalDuration += duration;
+        return {
+          url: vidUrl,
+          duration,
+          buff,
+        };
+      };
+
+      // Normal setup, with MediaSource, Object URL, and prepped SourceBuffer
+      const mediaSource = new MediaSource();
+      video.src = URL.createObjectURL(mediaSource);
+      // mode = segments
+      var mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+      // var mimeCodec = 'video/mp4; codecs="avc1.42c01e,mp4a.40.2"; profiles="isom,iso2,avc1,mp41"';
+      // var mimeCodec = 'video/mp4; codecs="mp4a.40.2,avc1.64001f"; profiles="mp42,mp41,isom,iso2"';
+      const sourceBuffer = await addSourceBufferWhenOpen(mediaSource, mimeCodec, 'segments');
+
+      video.ontimeupdate = function (e) {
+        // console.log(e)
+        // console.log(video.videoTracks, video.currentTime)
+        show_memory_usage();
+        if (totalDuration - video.currentTime < 10) {
+          getNextVidClips();
+        }
+      };
+
+      /**
+       * Pointer to last vid appended out of source list
+       */
+      let clipIndex = 1;
+      sourceBuffer.onupdateend = async () => {
+        // console.log(sourceBuffer);
+        // if (tmpQueue.length > 0) {
+        //   var clipBuff = await getClipBuff(assets[clipIndex]);
+        //   sourceBuffer.timestampOffset += clipBuff.duration;
+        //   sourceBuffer.appendBuffer(clipBuff.buff);
+        // } else {
+        //   // Done!
+        //   mediaSource.endOfStream();
+        //   console.log('mediaSource.endOfStream()')
+        // }
+      };
+
+      // This will kick off event listener chain above
+      var clipBuff = await getClipBuff(tmpQueue.shift());
+      sourceBuffer.appendBuffer(clipBuff.buff);
+      video.play();
+
+      async function getNextVidClips() {
+        if (tmpQueue.length > 0) {
+          var clipBuff = await getClipBuff(tmpQueue.shift());
+          sourceBuffer.timestampOffset += clipBuff.duration;
+          sourceBuffer.appendBuffer(clipBuff.buff);
+        }
+
+        if (tmpQueue.length == 0) tmpQueue.push(...assets);
+      }
+
+
+      async function show_memory_usage() {
+        if (window.performance.memory) {
+          document.getElementById('memory_usage').innerText = "jsHeapSizeLimit: "
+            + Math.round(window.performance.memory?.jsHeapSizeLimit / (1024 * 1024)) + "MB\n" +
+            "totalJSHeapSize: " + Math.round(window.performance.memory?.totalJSHeapSize / (1024 * 1024)) + "MB\n" +
+            "usedJSHeapSize:  " + Math.round(window.performance.memory?.usedJSHeapSize / (1024 * 1024)) + "MB";
+        }
+      }
+    })();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+body {
+  background-color: #eee;
+}
+
+h1 {
+  padding: 20px;
+  background-color: #fff;
+  font-size: 3rem;
+}
+
+video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background-color: #000;
+}
+
+h2,
+h3 {
+  text-align: center;
+}
+
+h3 {
+  font-size: 1.4rem;
+}
+
+h5 {
+  padding: 1rem 2rem;
+  background-color: #fff;
+}
+
+.form{
+  width: 80%;
+  margin: 0 auto;
+}
+
+.js-player-mp4 {
+  width: 400px;
+  height: 300px;
+}
+
+.video-area {
+  display: flex;
+  flex-grow: 1;
+  gap: 12px;
+  background-color: #000;
+}
+
+.video-area .log {
+  flex-grow: 1;
+}
+
+.video-area .log-item {
+  color: #54ab3d;
+  line-height: 20px;
+  font-size: 12px;
+}

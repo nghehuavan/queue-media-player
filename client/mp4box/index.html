@@ -1,0 +1,117 @@
+<!doctype html>
+
+<head>
+  <title>Mp4Box.js check video codec</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link href="https://cdn.jsdelivr.net/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="./mp4box.all.min.js"></script>
+  <link href="./style.css" rel="stylesheet" />
+</head>
+
+<body>
+  <br />
+  <form class="form">
+    <div class="form-group row">
+      <div class="col-sm-8">
+        <input type="text" class="form-control" id="video-url"
+          value="https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/video/aws.mp4" />
+      </div>
+      <div class="col-sm-2">
+        <button type="button" class="btn btn-default js-play-mp4">Get Info</button>
+      </div>
+    </div>
+  </form>
+  <div class="video">
+    <div class="video-area">
+      <video class="js-player-mp4" controls width="100%" height="480px"></video>
+      <div class="log js-log-mp4">
+      </div>
+    </div>
+  </div>
+
+  <script src="http://s1.vued.vanthink.cn/d59f937c159f/jquery-2.2.1.min.js"></script>
+  <script>
+
+    function log(text) {
+      var $wrap = $('.js-log-mp4');
+      var logEl = document.createElement('P');
+      logEl.innerText = text;
+      logEl.className = 'log-item';
+      $wrap.append(logEl);
+    }
+    function clearLog() {
+      var $wrap = $('.js-log-mp4');
+      $wrap.html('');
+    }
+
+    const video = document.querySelector('.js-player-mp4');
+
+    function playMp4() {
+      clearLog();
+      log('Get Video Element');
+
+      const mp4boxfile = MP4Box.createFile();
+      mp4boxfile.onReady = function (info) {
+        log('Get Video Info');
+        video.src = document.getElementById('video-url').value;
+        video.play();
+        showVideoInfo(info);
+      };
+      mp4boxfile.onError = function (e) {
+        console.log('mp4box failed to parse data.', e);
+      };
+
+      mp4boxfile.onMoovStart = function () {
+        console.log('Starting to receive File Information');
+      };
+
+      const range = 'bytes=0-50000';
+      const vidUrl = document.getElementById('video-url').value;
+      fetch(vidUrl)
+        .then(function (response) {
+          return response.arrayBuffer();
+        })
+        .then(function (arrayBuffer) {
+          arrayBuffer.fileStart = 0;
+          mp4boxfile.appendBuffer(arrayBuffer);
+          mp4boxfile.flush();
+        })
+        .catch((error) => {
+          console.error('There was an error!', error);
+        });
+    }
+
+    function showVideoInfo(info) {
+      console.log(info);
+      var duration;
+      if (info.isFragmented) {
+        duration = info.fragment_duration / info.timescale;
+      } else {
+        duration = info.duration / info.timescale;
+      }
+      log('Duration: ' + parseInt(duration) + 's');
+      log('mime: ' + info.mime);
+      log('Fragmented: ' + info.isFragmented);
+      log('Brands: ' + info.brands.join(','));
+      log('Video Metadata:  ');
+      const videoTrack = info.tracks[0];
+      log('Video Codec: "' + videoTrack.codec + '"; nb_samples: ' + videoTrack.nb_samples);
+      log(videoTrack.name + ': size: ' + videoTrack.size + '; bitrate: ' + videoTrack.bitrate);
+      log('Audio Metadata');
+      const audioTrack = info.tracks[1];
+      log('Audio Codec: "' + audioTrack.codec + '"; nb_samples: ' + audioTrack.nb_samples);
+      log(audioTrack.name + ': size: ' + audioTrack.size + '; bitrate: ' + audioTrack.bitrate);
+    }
+
+    $(document).ready(function () {
+      $('.js-play-mp4').on('click', function () {
+        playMp4();
+      });
+    });
+
+
+  </script>
+</body>
+
+</html>

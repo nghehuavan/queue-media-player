@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>queue video player by nghehuavan</title>
+  <style>
+    body {
+      background: black;
+      color: white;
+    }
+
+    video {
+      background: black;
+    }
+
+    button {
+      padding: 8px;
+      min-width: 100px;
+    }
+  </style>
+</head>
+
+<body>
+  <table border="1">
+    <thead>
+      <tr>
+        <td>
+          [MediaSource] only supports "fragmented MP4" videos
+          <br />
+          <a href="./mp4box/index.html" target="_blank">
+            Check fragmented video
+          </a>
+
+        </td>
+        <td>video original</td>
+      </tr>
+    </thead>
+    <tr>
+      <td>
+        <video id="videoBuffer" controls muted width="400" height="300"></video>
+      </td>
+      <td>
+        <video id="videoNormal" controls muted loop width="400" height="300"
+          src="https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/frag/ytb.mp4" muted>
+        </video>
+      </td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center">
+        <button onclick="playTogether()">Play</button>
+      </td>
+    </tr>
+  </table>
+  <div id="memory_usage"></div>
+  <script src="./queue-video-player.js"></script>
+  <script>
+    const baseURL = 'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/frag/'
+    const assets = [
+      baseURL + 'ytb001.mp4',
+      baseURL + 'ytb002.mp4',
+      baseURL + 'ytb003.mp4',
+      baseURL + 'ytb004.mp4',
+      baseURL + 'ytb005.mp4',
+      baseURL + 'ytb006.mp4',
+      baseURL + 'ytb007.mp4',
+      baseURL + 'ytb008.mp4',
+      baseURL + 'ytb009.mp4',
+      baseURL + 'ytb010.mp4',
+      baseURL + 'ytb011.mp4',
+      baseURL + 'ytb012.mp4',
+    ];
+
+    function playTogether() {
+      const player = new QueueVideoPlayer('#videoBuffer');
+      player.addQueue(assets);
+      player.onQueueShift = (queue) => {
+        if (queue.length < 2)
+          player.addQueue(assets);
+      };
+      player.play();
+
+      const videoNormal = document.querySelector('#videoNormal');
+      videoNormal.play();
+    }
+
+    // display js memory size
+    setInterval(async function () {
+      if (window.performance.memory) {
+        document.getElementById('memory_usage').innerText = "jsHeapSizeLimit: "
+          + Math.round(window.performance.memory?.jsHeapSizeLimit / (1024 * 1024)) + "MB\n" +
+          "totalJSHeapSize: " + Math.round(window.performance.memory?.totalJSHeapSize / (1024 * 1024)) + "MB\n" +
+          "usedJSHeapSize:  " + Math.round(window.performance.memory?.usedJSHeapSize / (1024 * 1024)) + "MB";
+      }
+    }, 1000);
+  </script>
+</body>
+
+</html>

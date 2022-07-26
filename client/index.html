@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+</head>
+
+<style type="text/css">
+  #log {
+    font-size: 8px;
+  }
+</style>
+
+<body>
+  <table>
+    <thead>
+      <tr>
+        <td>video split 12 file (file=5s) stuck video every 5s</td>
+        <td>video original</td>
+      </tr>
+    </thead>
+    <tr>
+      <td>
+        <video controls autoplay muted width="400" height="300"
+          src="https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb001.mp4">
+        </video>
+      </td>
+      <td>
+        <video controls autoplay muted width="400" height="300"
+          src="https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb.mp4">
+        </video>
+      </td>
+    </tr>
+  </table>
+
+  <div id="log"></div>
+  <br />
+  <div>
+    <h1>This is demo play multiple file 5-10s (stuck video on load next video)</h1>
+    <pre>
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb002.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb003.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb004.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb005.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb006.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb007.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb008.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb009.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb010.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb011.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb012.mp4',
+    </pre>
+  </div>
+  <div> <a target="_blank" href="./queue-video-player.html"> queue-video-player </a></div>
+  <script>
+    var video = document.querySelector('video');
+    var log = document.getElementById('log');
+
+    video.onplaying = function () {
+      log.innerHTML += "<div>playing :" + video.src + " </div>";
+    }
+
+    video.onended = function () {
+      video.src = vidClips.shift();
+      video.play();
+    }
+    const vidClips = [
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb002.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb003.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb004.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb005.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb006.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb007.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb008.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb009.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb010.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb011.mp4',
+      'https://raw.githubusercontent.com/nghehuavan/js-video-player-codec/main/client/video/ytb012.mp4',
+    ];   
+  </script>
+</body>
+
+</html>

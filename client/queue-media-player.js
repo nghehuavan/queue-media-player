@@ -4,7 +4,7 @@ Copyright © 2022, Nghe <nghe.huavan@gmail.com> (https://github.com/nghehuavan)
 Free for easylife
 */
 
-class QueueVideoPlayer {
+class QueueMediaPlayer {
   constructor(videoSelector) {
     this.config = {
       nextAt: 10,

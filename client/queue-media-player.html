@@ -53,7 +53,7 @@
     </tr>
   </table>
   <div id="memory_usage"></div>
-  <script src="./queue-video-player.js"></script>
+  <script src="./queue-media-player.js"></script>
   <script>
     const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/video/frag/'
     const assets = [
@@ -72,7 +72,7 @@
     ];
 
     function playTogether() {
-      const player = new QueueVideoPlayer('#videoBuffer');
+      const player = new QueueMediaPlayer('#videoBuffer');
       player.addQueue(assets);
       player.onQueueShift = (queue) => {
         if (queue.length < 2)

@@ -35,6 +35,8 @@ class QueueMediaPlayer {
   play = async () => {
     if (this.queue.length > 0) {
       this.video.ontimeupdate = (e) => {
+        console.log(this.video.buffered.start(0));
+        console.log(this.video.buffered.end(0));
         // listen video playing time and get next video when remaining < 10s
         const remaining = this.totalDuration - this.video.currentTime;
         if (remaining < this.config.nextAt) {

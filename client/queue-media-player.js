@@ -30,8 +30,6 @@ class QueueMediaPlayer {
 
   addQueue = (arr) => {
     this.queue.push(...arr);
-
-    console.log(this.queueWaiting);
     if (this.queueWaiting) {
       this.appendNextQueue();
     }
@@ -47,10 +45,11 @@ class QueueMediaPlayer {
       this.video.ontimeupdate = (e) => {
         // listen video playing time and get next video when remaining < 10s
         const remaining = this.totalDuration - this.video.currentTime;
-        this.queueWaiting = remaining <= 0;
         if (remaining < this.config.nextAt) {
           this.appendNextQueue();
         }
+
+        this.queueWaiting = this.queue.length == 0 && remaining <= 0;
       };
 
       // append first video for start

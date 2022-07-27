@@ -60,7 +60,7 @@ class QueueMediaPlayer {
       };
 
       this.video.onplaying = (e) => {
-        console.log('this.video.onplaying');
+        console.log('this.video.onplaying at ' + this.video.currentTime + '/' + this.totalDuration);
         this.emptyQueueWaiting = false;
       };
 

@@ -17,6 +17,7 @@ class QueueMediaPlayer {
 
     this.timeRanges = [];
     this.totalDuration = 0;
+    this.lastOffset = 0;
 
     this.video = document.querySelector(videoSelector);
     this.mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
@@ -31,7 +32,7 @@ class QueueMediaPlayer {
     this.readyState = {
       HAVE_NOTHING: 0,
       HAVE_METADATA: 1,
-      HAVE_CURRENT_DATA: 2, //have data but not have buffer
+      HAVE_CURRENT_DATA: 2, //have data but not have buffer => need re-append
       HAVE_FUTURE_DATA: 3,
       HAVE_ENOUGH_DATA: 4, //available playback
     };
@@ -93,21 +94,11 @@ class QueueMediaPlayer {
       console.log(this.video.readyState);
       this.queueWaiting = Math.ceil(this.video.currentTime) == Math.ceil(this.totalDuration);
       console.log('this.queueWaiting, this.networkWaiting', this.queueWaiting, this.networkWaiting);
-
       if (this.queueWaiting || this.networkWaiting) return;
 
-      const rangeIdx = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
-      if (rangeIdx >= 0) {
-        console.log(this.timeRanges);
-        const timeRange = this.timeRanges[rangeIdx];
-        console.log(rangeIdx, timeRange);
-
-        if (this.video.readyState < this.readyState.HAVE_ENOUGH_DATA) {
-          console.log('reload timeRange: ', timeRange);
-          const videoFecth = await this.fecthVideoBuff(timeRange.url);
-          this.sourceBuffer.timestampOffset = timeRange.offset;
-          this.sourceBuffer.appendBuffer(videoFecth.buffer);
-        }
+      const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
+      if (index >= 0 && index < this.timeRanges.length) {
+        seekBackDVR(index);
       }
     };
 
@@ -118,19 +109,37 @@ class QueueMediaPlayer {
     };
   };
 
+  seekBackDVR = async (index) => {
+    console.log('seekBack', index);
+    console.log(this.timeRanges);
+    const timeRange = this.timeRanges[index];
+    console.log(timeRange);
+
+    if (this.video.readyState < this.readyState.HAVE_ENOUGH_DATA) {
+      console.log('reload timeRange: ', timeRange);
+      const videoFecth = await this.fecthVideo(timeRange.url);
+      this.sourceBuffer.timestampOffset = timeRange.offset;
+      this.sourceBuffer.appendBuffer(videoFecth.buffer);
+    }
+  };
+
   queueShiftFecthAppendBuffer = async (isFirst = false) => {
     if (this.queue.length > 0) {
       const url = this.queue.shift();
       if (isFirst) console.log(this.sourceBuffer);
 
       const videoFecth = await this.fecthVideo(url);
-      this.sourceBuffer.timestampOffset += isFirst ? 0 : videoFecth.duration;
-      console.log(this.sourceBuffer.timestampOffset);
-      const from = this.sourceBuffer?.timestampOffset ?? 0;
-      const to = from + videoFecth.duration;
-      this.timeRanges.push({ url: url, from: from, to: to, offset: this.sourceBuffer.timestampOffset });
+      this.lastOffset += isFirst ? 0 : videoFecth.duration;
+      this.sourceBuffer.timestampOffset = this.lastOffset;
       this.sourceBuffer.appendBuffer(videoFecth.buffer);
       this.totalDuration += videoFecth.duration;
+
+      this.timeRanges.push({
+        url: url,
+        from: this.lastOffset,
+        to: this.lastOffset + videoFecth.duration,
+        offset: this.lastOffset,
+      });
 
       // callback event
       if (this.onQueueShift) this.onQueueShift(this.queue);

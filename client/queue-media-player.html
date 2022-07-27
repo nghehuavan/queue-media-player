@@ -50,8 +50,12 @@
       <td>
         <div id="video-duration">duration: 00:00:00</div>
         <div>
-          <button onclick="pauseAddQueue()">Pause add queue</button>
-          <button onclick="resumeAddQueue()">Resume add queue</button>
+          <input id="toggleQueue" name="toggleQueue" type="checkbox" />
+          <label for="toggleQueue">pause infinity queue</label>
+          <br />
+          <label for="playbackRate">play speed</label>
+          <input type="number" placeholder="0.00" id="playbackRate" name="playbackRate" min="0" value="1.0" step="0.1"
+            style="width: 86px;" />
         </div>
       </td>
       <td>
@@ -99,13 +103,20 @@
       }
     }
 
-    function pauseAddQueue() {
-      player.onQueueShift = null;
+    // pause add infinity queue
+    document.querySelector('#toggleQueue').onchange = (e) => {
+      if (e.target.checked) {
+        player.onQueueShift = null;
+      }
+      else {
+        player.onQueueShift = infinityAddQueue;
+        player.addQueue(assets);
+      }
     }
 
-    function resumeAddQueue() {
-      player.onQueueShift = infinityAddQueue;
-      player.addQueue(assets);
+    // change play speed
+    document.querySelector('#playbackRate').onchange = (e) => {
+      player.video.playbackRate = parseFloat(e.target.value);
     }
 
     // display js memory size

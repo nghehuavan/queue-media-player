@@ -27,15 +27,6 @@ class QueueMediaPlayer {
     this.config = {
       nextOnRemaining: 10,
     };
-
-    //https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
-    this.readyState = {
-      HAVE_NOTHING: 0,
-      HAVE_METADATA: 1,
-      HAVE_CURRENT_DATA: 2, //have data but not have buffer => need re-append
-      HAVE_FUTURE_DATA: 3,
-      HAVE_ENOUGH_DATA: 4, //available playback
-    };
   }
 
   inittialMediaSource = () => {
@@ -74,9 +65,9 @@ class QueueMediaPlayer {
     // listen video playing time and get next video when remaining < 10s
     this.video.ontimeupdate = async (e) => {
       if (this.fetching) return;
-
       this.fetching = true;
-      const remaining = this.totalDuration - this.video.currentTime;
+
+      const remaining = Math.abs(this.totalDuration - this.video.currentTime);
       if (remaining <= this.config.nextOnRemaining) {
         await this.queueShiftFecthAppendBuffer();
       }
@@ -90,15 +81,14 @@ class QueueMediaPlayer {
 
     // wating for next queue or some network slow
     this.video.onwaiting = async (e) => {
+      if (this.video.buffered.length == 0) return;
       console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalDuration);
-      console.log(this.video.readyState);
-      this.queueWaiting = Math.ceil(this.video.currentTime) == Math.ceil(this.totalDuration);
       console.log('this.queueWaiting, this.networkWaiting', this.queueWaiting, this.networkWaiting);
-      if (this.queueWaiting || this.networkWaiting) return;
-
-      const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
-      if (index >= 0 && index < this.timeRanges.length) {
-        seekBackDVR(index);
+      if (!this.queueWaiting && !this.networkWaiting) {
+        const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
+        if (index >= 0 && index < this.timeRanges.length) {
+          this.seekBackDVR(index);
+        }
       }
     };
 
@@ -115,12 +105,17 @@ class QueueMediaPlayer {
     const timeRange = this.timeRanges[index];
     console.log(timeRange);
 
-    if (this.video.readyState < this.readyState.HAVE_ENOUGH_DATA) {
-      console.log('reload timeRange: ', timeRange);
-      const videoFecth = await this.fecthVideo(timeRange.url);
-      this.sourceBuffer.timestampOffset = timeRange.offset;
-      this.sourceBuffer.appendBuffer(videoFecth.buffer);
-    }
+    // if (needReload()) {
+    console.log('reload timeRange: ', timeRange);
+    const videoFecth = await this.fecthVideo(timeRange.url);
+    this.sourceBuffer.timestampOffset = timeRange.offset;
+    this.sourceBuffer.appendBuffer(videoFecth.buffer);
+    // }
+  };
+
+  needReload = () => {
+    //https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+    return this.video.readyState < 4;
   };
 
   queueShiftFecthAppendBuffer = async (isFirst = false) => {
@@ -131,7 +126,7 @@ class QueueMediaPlayer {
       this.sourceBuffer.timestampOffset = this.lastOffset;
       this.sourceBuffer.appendBuffer(videoFecth.buffer);
       this.totalDuration += videoFecth.duration;
-
+      this.queueWaiting = this.queue.length == 0;
       this.timeRanges.push({
         url: url,
         from: this.lastOffset,

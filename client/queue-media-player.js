@@ -54,19 +54,19 @@ class QueueMediaPlayer {
 
       // wating for next queue or some network slow
       this.video.onwaiting = (e) => {
-        console.log('this.video.onwaiting at ' + this.video.currentTime + '/' + this.totalDuration);
+        console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalDuration);
 
         this.emptyQueueWaiting = this.totalDuration > 0 && this.queue.length == 0;
       };
 
       this.video.onplaying = (e) => {
-        console.log('this.video.onplaying at ' + this.video.currentTime + '/' + this.totalDuration);
+        console.log('this.video.onplaying at ' + this.video.currentTime + ' / ' + this.totalDuration);
         this.emptyQueueWaiting = false;
       };
 
       this.video.onseeked = (e) => {
         console.log(e);
-        console.log('this.video.onseeked at ' + this.video.currentTime + '/' + this.totalDuration);
+        console.log('this.video.onseeked at ' + this.video.currentTime + ' / ' + this.totalDuration);
       };
       // append first video for start
       this.queueShiftAppendBuffer({ isFirst: true });

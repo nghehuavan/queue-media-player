@@ -102,8 +102,10 @@ class QueueMediaPlayer {
       .map((i) => i.duration)
       .reduce((prev, curr) => prev + curr, 0);
     this.totalBufferDuration = sumBufferDuration;
-    this.lastOffset = timeRange.offset - timeRange.duration;
-    await this.queueShiftFecthAppendBuffer({ isFirst: index == 0 });
+    const videoFecth = await this.fecthVideo(url);
+    this.lastOffset = timeRange.offset;
+    this.sourceBuffer.timestampOffset = this.lastOffset;
+    this.sourceBuffer.appendBuffer(videoFecth.buffer);
   };
 
   waitForPendingFetching = () => {

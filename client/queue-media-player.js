@@ -7,7 +7,7 @@ Free for easylife
 class QueueMediaPlayer {
   constructor(videoSelector) {
     this.config = {
-      nextAt: 10,
+      nextOnRemaining: 10,
     };
     this.queue = [];
     this.onQueueShift = null;
@@ -45,7 +45,7 @@ class QueueMediaPlayer {
       this.video.ontimeupdate = (e) => {
         // listen video playing time and get next video when remaining < 10s
         const remaining = this.totalDuration - this.video.currentTime;
-        if (remaining < this.config.nextAt) {
+        if (remaining < this.config.nextOnRemaining) {
           this.appendNextQueue();
         }
 

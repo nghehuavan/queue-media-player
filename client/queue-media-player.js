@@ -8,9 +8,11 @@ class QueueMediaPlayer {
   constructor(videoSelector) {
     this.queue = [];
     this.onQueueShift = null;
-    this.emptyQueueWaiting = false;
 
-    this.seeks = [];
+    this.queueWaiting = false;
+    this.networkWaiting = false;
+
+    this.timeRanges = [];
     this.totalDuration = 0;
 
     this.video = document.querySelector(videoSelector);
@@ -21,11 +23,21 @@ class QueueMediaPlayer {
     this.config = {
       nextOnRemaining: 10,
     };
+
+    //https://developer.mozilla.org/en-US/docs/Web/API/HTMLMediaElement/readyState
+    this.readyState = {
+      HAVE_NOTHING: 0,
+      HAVE_METADATA: 1,
+      HAVE_CURRENT_DATA: 2, //have data but not have buffer
+      HAVE_FUTURE_DATA: 3,
+      HAVE_ENOUGH_DATA: 4, //available playback
+    };
   }
 
   inittialMediaSource = () => {
     this.mediaSource = new MediaSource();
     this.video.src = URL.createObjectURL(this.mediaSource);
+    this.video.playbackRate = 1.0;
     this.mediaSource.addEventListener('sourceopen', () => {
       this.sourceBuffer = this.mediaSource.addSourceBuffer(this.mimeCodec);
       this.sourceBuffer.mode = 'segments';
@@ -34,7 +46,7 @@ class QueueMediaPlayer {
 
   addQueue = (arr) => {
     this.queue.push(...arr);
-    if (this.emptyQueueWaiting) {
+    if (this.queueWaiting) {
       this.queueShiftFecthAppendBuffer();
     }
   };
@@ -58,42 +70,60 @@ class QueueMediaPlayer {
       if (remaining <= this.config.nextOnRemaining) {
         this.queueShiftFecthAppendBuffer();
       }
-      this.emptyQueueWaiting = this.queue.length == 0 && remaining <= 0;
-    };
-
-    // wating for next queue or some network slow
-    this.video.onwaiting = (e) => {
-      console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalDuration);
-
-      this.emptyQueueWaiting = this.totalDuration > 0 && this.queue.length == 0;
     };
 
     this.video.onplaying = (e) => {
       console.log('this.video.onplaying at ' + this.video.currentTime + ' / ' + this.totalDuration);
-      this.emptyQueueWaiting = false;
+      this.queueWaiting = false;
     };
 
-    this.video.onseeked = (e) => {
+    // wating for next queue or some network slow
+    this.video.onwaiting = async (e) => {
+      console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalDuration);
+      console.log(this.video.readyState);
+
+      this.queueWaiting = this.queue.length == 0;
+      // if (this.queueWaiting || this.networkWaiting) return;
+
+      // const rangeIdx = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
+      // if (rangeIdx >= 0) {
+      //   console.log(this.timeRanges);
+      //   const timeRange = this.timeRanges[rangeIdx];
+      //   console.log(rangeIdx, timeRange);
+
+      //   const videoFecth = await this.fecthVideoBuff(timeRange.url);
+      //   this.sourceBuffer.timestampOffset = timeRange.offset;
+      //   this.sourceBuffer.appendBuffer(videoFecth.buffer);
+      // }
+    };
+
+    this.video.onseeked = async (e) => {
       console.log(e);
       console.log('this.video.onseeked at ' + this.video.currentTime + ' / ' + this.totalDuration);
+      console.log(this.video.readyState);
     };
   };
 
   queueShiftFecthAppendBuffer = async (isFirst = false) => {
     if (this.queue.length > 0) {
-      const url = this.queue.shift();
-      const videoFecth = await this.fecthVideoBuff(url);
+      try {
+        const url = this.queue.shift();
+        const videoFecth = await this.fecthVideoBuff(url);
+        this.sourceBuffer.timestampOffset += isFirst ? 0 : videoFecth.duration;
+        const from = this.sourceBuffer?.timestampOffset ?? 0;
+        const to = from + videoFecth.duration;
+        this.timeRanges.push({ url: url, from: from, to: to, offset: this.sourceBuffer.timestampOffset });
+        this.sourceBuffer.appendBuffer(videoFecth.buffer);
+        this.totalDuration += videoFecth.duration;
 
-      const fromOffset = this.sourceBuffer?.timestampOffset ?? 0;
-      const toOffset = isFirst ? fromOffset : fromOffset + videoFecth.duration;
-      this.sourceBuffer.timestampOffset = toOffset;
-      this.sourceBuffer.appendBuffer(videoFecth.buffer);
-
-      this.totalDuration += videoFecth.duration;
-      this.seeks.push({ url: url, from: fromOffset, to: toOffset });
-
-      // callback event
-      if (this.onQueueShift) this.onQueueShift(this.queue);
+        // callback event
+        if (this.onQueueShift) this.onQueueShift(this.queue);
+      } catch (exception) {
+        if (exception.name == 'NetworkError') {
+          console.log('There was a network error.');
+          this.networkWaiting = true;
+        }
+      }
     }
   };
 

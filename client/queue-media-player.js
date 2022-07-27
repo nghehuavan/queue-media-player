@@ -77,16 +77,12 @@ class QueueMediaPlayer {
     };
 
     this.video.onwaiting = async (e) => {
-      console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalBufferDuration);
-      const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
-      if (index >= 0) {
-        this.seekBackTimeRanges(index);
-      }
-    };
+      if (this.video?.buffered?.length ?? 0 == 0) return;
 
-    this.video.onseeked = async (e) => {
-      console.log(e);
-      console.log('this.video.onseeked at ' + this.video.currentTime + ' / ' + this.totalBufferDuration);
+      console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalBufferDuration);
+
+      if (this.queueWaiting || this.networkWaiting) return;
+
       const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
       if (index >= 0) {
         this.seekBackTimeRanges(index);
@@ -97,6 +93,7 @@ class QueueMediaPlayer {
   seekBackTimeRanges = async (index) => {
     this.video.pause();
     await this.waitForPendingFetching();
+    const timeRange = this.timeRanges[index];
 
     // Rebuild queue from index
     const reBuildQueue = this.timeRanges.filter((_, idx) => idx >= index).map((i) => i.url);
@@ -107,8 +104,8 @@ class QueueMediaPlayer {
       .filter((_, idx) => idx < index)
       .map((i) => i.duration)
       .reduce((prev, curr) => prev + curr, 0);
-    this.totalBufferDuration = reBufferDuration;
-
+    this.totalBufferDuration = reBufferDuration;    
+    this.lastOffset = timeRange.offset - timeRange.duration;
     await this.queueShiftFecthAppendBuffer({ isFirst: index == 0 });
     this.video.play();
   };

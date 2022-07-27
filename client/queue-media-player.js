@@ -8,7 +8,7 @@ class QueueMediaPlayer {
   constructor(videoSelector) {
     this.queue = [];
     this.onQueueShift = null;
-    this.queueWaiting = false;
+    this.emptyQueueWaiting = false;
 
     this.seeks = [];
     this.totalDuration = 0;
@@ -34,7 +34,7 @@ class QueueMediaPlayer {
 
   addQueue = (arr) => {
     this.queue.push(...arr);
-    if (this.queueWaiting) {
+    if (this.emptyQueueWaiting) {
       this.queueShiftAppendBuffer();
     }
   };
@@ -49,21 +49,25 @@ class QueueMediaPlayer {
         if (remaining <= this.config.nextOnRemaining) {
           this.queueShiftAppendBuffer();
         }
-        this.queueWaiting = this.queue.length == 0 && remaining <= 0;
+        this.emptyQueueWaiting = this.queue.length == 0 && remaining <= 0;
       };
 
       // wating for next queue or some network slow
       this.video.onwaiting = (e) => {
         console.log('this.video.onwaiting at ' + this.video.currentTime + '/' + this.totalDuration);
 
-        this.queueWaiting = this.totalDuration > 0 && this.queue.length == 0;
+        this.emptyQueueWaiting = this.totalDuration > 0 && this.queue.length == 0;
       };
 
       this.video.onplaying = (e) => {
         console.log('this.video.onplaying');
-        this.queueWaiting = false;
+        this.emptyQueueWaiting = false;
       };
 
+      this.video.onseeked = (e) => {
+        console.log(e);
+        console.log('this.video.onseeked at ' + this.video.currentTime + '/' + this.totalDuration);
+      };
       // append first video for start
       this.queueShiftAppendBuffer({ isFirst: true });
 

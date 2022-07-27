@@ -48,7 +48,7 @@
     </tr>
     <tr>
       <td>
-        <div id="video-duration">duration: 00:00:00</div>
+        <div id="buffer-duration">duration: 00:00:00</div>
         <div>
           <input id="toggleQueue" name="toggleQueue" type="checkbox" />
           <label for="toggleQueue">pause infinity queue</label>
@@ -121,8 +121,8 @@
 
     // display js memory size
     setInterval(async function () {
-      if (player?.totalDuration) {
-        document.getElementById('video-duration').innerText = "duration: " + secondsToTime(player?.totalDuration);
+      if (player?.totalBufferDuration) {
+        document.getElementById('buffer-duration').innerText = "buffered: " + secondsToTime(player?.totalBufferDuration);
       }
 
       if (window.performance.memory) {

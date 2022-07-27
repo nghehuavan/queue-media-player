@@ -77,6 +77,17 @@ class QueueMediaPlayer {
     };
 
     this.video.onwaiting = async (e) => {
+      // if (this.video?.buffered?.length <= 0) return;
+      // if (this.queueWaiting || this.networkWaiting) return;
+
+      // console.log('seek back but not have data');
+      // const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
+      // if (index >= 0) {
+      //   this.seekBackTimeRanges(index);
+      // }
+    };
+
+    this.video.onseeked = async (e) => {
       if (this.video?.buffered?.length <= 0) return;
       if (this.queueWaiting || this.networkWaiting) return;
 
@@ -102,7 +113,7 @@ class QueueMediaPlayer {
       .map((i) => i.duration)
       .reduce((prev, curr) => prev + curr, 0);
     this.totalBufferDuration = sumBufferDuration;
-    const videoFecth = await this.fecthVideo(url);
+    const videoFecth = await this.fecthVideo(timeRange.url);
     this.lastOffset = timeRange.offset;
     this.sourceBuffer.timestampOffset = this.lastOffset;
     this.sourceBuffer.appendBuffer(videoFecth.buffer);

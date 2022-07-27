@@ -35,7 +35,7 @@ class QueueMediaPlayer {
   addQueue = (arr) => {
     this.queue.push(...arr);
     if (this.emptyQueueWaiting) {
-      this.queueShiftAppendBuffer();
+      this.queueShiftFecthAppendBuffer();
     }
   };
 
@@ -45,7 +45,7 @@ class QueueMediaPlayer {
 
     if (this.queue.length > 0) {
       // append first video for start
-      this.queueShiftAppendBuffer({ isFirst: true });
+      this.queueShiftFecthAppendBuffer({ isFirst: true });
       // play video;
       this.video.play();
     }
@@ -56,7 +56,7 @@ class QueueMediaPlayer {
     this.video.ontimeupdate = (e) => {
       const remaining = this.totalDuration - this.video.currentTime;
       if (remaining <= this.config.nextOnRemaining) {
-        this.queueShiftAppendBuffer();
+        this.queueShiftFecthAppendBuffer();
       }
       this.emptyQueueWaiting = this.queue.length == 0 && remaining <= 0;
     };
@@ -79,7 +79,7 @@ class QueueMediaPlayer {
     };
   };
 
-  queueShiftAppendBuffer = async (isFirst = false) => {
+  queueShiftFecthAppendBuffer = async (isFirst = false) => {
     if (this.queue.length > 0) {
       const url = this.queue.shift();
       const videoFecth = await this.fecthVideoBuff(url);

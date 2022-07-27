@@ -41,39 +41,42 @@ class QueueMediaPlayer {
 
   play = async () => {
     this.inittialMediaSource();
+    this.inittialVideoEventListener();
 
     if (this.queue.length > 0) {
-      // listen video playing time and get next video when remaining < 10s
-      this.video.ontimeupdate = (e) => {
-        const remaining = this.totalDuration - this.video.currentTime;
-        if (remaining <= this.config.nextOnRemaining) {
-          this.queueShiftAppendBuffer();
-        }
-        this.emptyQueueWaiting = this.queue.length == 0 && remaining <= 0;
-      };
-
-      // wating for next queue or some network slow
-      this.video.onwaiting = (e) => {
-        console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalDuration);
-
-        this.emptyQueueWaiting = this.totalDuration > 0 && this.queue.length == 0;
-      };
-
-      this.video.onplaying = (e) => {
-        console.log('this.video.onplaying at ' + this.video.currentTime + ' / ' + this.totalDuration);
-        this.emptyQueueWaiting = false;
-      };
-
-      this.video.onseeked = (e) => {
-        console.log(e);
-        console.log('this.video.onseeked at ' + this.video.currentTime + ' / ' + this.totalDuration);
-      };
       // append first video for start
       this.queueShiftAppendBuffer({ isFirst: true });
-
       // play video;
       this.video.play();
     }
+  };
+
+  inittialVideoEventListener = () => {
+    // listen video playing time and get next video when remaining < 10s
+    this.video.ontimeupdate = (e) => {
+      const remaining = this.totalDuration - this.video.currentTime;
+      if (remaining <= this.config.nextOnRemaining) {
+        this.queueShiftAppendBuffer();
+      }
+      this.emptyQueueWaiting = this.queue.length == 0 && remaining <= 0;
+    };
+
+    // wating for next queue or some network slow
+    this.video.onwaiting = (e) => {
+      console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalDuration);
+
+      this.emptyQueueWaiting = this.totalDuration > 0 && this.queue.length == 0;
+    };
+
+    this.video.onplaying = (e) => {
+      console.log('this.video.onplaying at ' + this.video.currentTime + ' / ' + this.totalDuration);
+      this.emptyQueueWaiting = false;
+    };
+
+    this.video.onseeked = (e) => {
+      console.log(e);
+      console.log('this.video.onseeked at ' + this.video.currentTime + ' / ' + this.totalDuration);
+    };
   };
 
   queueShiftAppendBuffer = async (isFirst = false) => {

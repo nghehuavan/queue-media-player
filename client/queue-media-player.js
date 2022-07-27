@@ -6,17 +6,21 @@ Free for easylife
 
 class QueueMediaPlayer {
   constructor(videoSelector) {
+    this.queue = [];
+    this.onQueueShift = null;
+    this.queueWaiting = false;
+
+    this.seeks = [];
+    this.totalDuration = 0;
+
+    this.video = document.querySelector(videoSelector);
+    this.mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
+    this.mediaSource = null;
+    this.sourceBuffer = null;
+
     this.config = {
       nextOnRemaining: 10,
     };
-    this.queue = [];
-    this.onQueueShift = null;
-    this.queueWaiting = null;
-    this.totalDuration = 0;
-    this.mediaSource = null;
-    this.sourceBuffer = null;
-    this.video = document.querySelector(videoSelector);
-    this.mimeCodec = 'video/mp4; codecs="avc1.42E01E, mp4a.40.2"';
   }
 
   inittialMediaSource = () => {
@@ -31,41 +35,57 @@ class QueueMediaPlayer {
   addQueue = (arr) => {
     this.queue.push(...arr);
     if (this.queueWaiting) {
-      this.appendNextQueue();
+      this.queueShiftAppendBuffer();
     }
-  };
-
-  clearQueue = () => {
-    this.queue = [];
   };
 
   play = async () => {
     this.inittialMediaSource();
-    if (this.queue.length > 0) {
-      this.video.ontimeupdate = (e) => {
-        // listen video playing time and get next video when remaining < 10s
-        const remaining = this.totalDuration - this.video.currentTime;
-        if (remaining < this.config.nextOnRemaining) {
-          this.appendNextQueue();
-        }
 
+    if (this.queue.length > 0) {
+      // listen video playing time and get next video when remaining < 10s
+      this.video.ontimeupdate = (e) => {
+        const remaining = this.totalDuration - this.video.currentTime;
+        if (remaining <= this.config.nextOnRemaining) {
+          this.queueShiftAppendBuffer();
+        }
         this.queueWaiting = this.queue.length == 0 && remaining <= 0;
       };
 
+      // wating for next queue or some network slow
+      this.video.onwaiting = (e) => {
+        console.log('this.video.onwaiting at ' + this.video.currentTime + '/' + this.totalDuration);
+
+        this.queueWaiting = this.totalDuration > 0 && this.queue.length == 0;
+      };
+
+      this.video.onplaying = (e) => {
+        console.log('this.video.onplaying');
+        this.queueWaiting = false;
+      };
+
       // append first video for start
-      this.appendNextQueue(true);
+      this.queueShiftAppendBuffer({ isFirst: true });
 
       // play video;
       this.video.play();
     }
   };
 
-  appendNextQueue = async (isFirst = false) => {
+  queueShiftAppendBuffer = async (isFirst = false) => {
     if (this.queue.length > 0) {
-      const videoFecth = await this.fecthVideoBuff(this.queue.shift());
-      this.sourceBuffer.timestampOffset += isFirst ? 0 : videoFecth.duration;
+      const url = this.queue.shift();
+      const videoFecth = await this.fecthVideoBuff(url);
+
+      const fromOffset = this.sourceBuffer?.timestampOffset ?? 0;
+      const toOffset = isFirst ? fromOffset : fromOffset + videoFecth.duration;
+      this.sourceBuffer.timestampOffset = toOffset;
       this.sourceBuffer.appendBuffer(videoFecth.buffer);
+
       this.totalDuration += videoFecth.duration;
+      this.seeks.push({ url: url, from: fromOffset, to: toOffset });
+
+      // callback event
       if (this.onQueueShift) this.onQueueShift(this.queue);
     }
   };

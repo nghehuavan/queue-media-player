@@ -77,12 +77,10 @@ class QueueMediaPlayer {
     };
 
     this.video.onwaiting = async (e) => {
-      if (this.video?.buffered?.length ?? 0 == 0) return;
-
-      console.log('this.video.onwaiting at ' + this.video.currentTime + ' / ' + this.totalBufferDuration);
-
+      if (this.video?.buffered?.length <= 0) return;
       if (this.queueWaiting || this.networkWaiting) return;
 
+      console.log('seek back but not have data');
       const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
       if (index >= 0) {
         this.seekBackTimeRanges(index);
@@ -91,7 +89,6 @@ class QueueMediaPlayer {
   };
 
   seekBackTimeRanges = async (index) => {
-    this.video.pause();
     await this.waitForPendingFetching();
     const timeRange = this.timeRanges[index];
 
@@ -100,14 +97,13 @@ class QueueMediaPlayer {
     this.queue.unshift(...reBuildQueue);
 
     // re-calulate totalBufferDuration by index
-    const reBufferDuration = this.timeRanges
+    const sumBufferDuration = this.timeRanges
       .filter((_, idx) => idx < index)
       .map((i) => i.duration)
       .reduce((prev, curr) => prev + curr, 0);
-    this.totalBufferDuration = reBufferDuration;    
+    this.totalBufferDuration = sumBufferDuration;
     this.lastOffset = timeRange.offset - timeRange.duration;
     await this.queueShiftFecthAppendBuffer({ isFirst: index == 0 });
-    this.video.play();
   };
 
   waitForPendingFetching = () => {
@@ -133,13 +129,19 @@ class QueueMediaPlayer {
       this.totalBufferDuration += videoFecth.duration;
       this.queueWaiting = this.queue.length == 0;
 
-      this.timeRanges.push({
+      const timeRange = {
         url: url,
         from: this.lastOffset,
         to: this.lastOffset + videoFecth.duration,
         offset: this.lastOffset,
         duration: videoFecth.duration,
-      });
+      };
+      const existed = this.timeRanges.findIndex(
+        (i) => i.url == timeRange.url && i.from == timeRange.from && i.to == timeRange.to && i.duration == timeRange.duration
+      );
+      if (existed < 0) {
+        this.timeRanges.push(timeRange);
+      }
 
       // callback event
       if (this.onQueueShift) this.onQueueShift(this.queue);

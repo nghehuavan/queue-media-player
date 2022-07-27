@@ -126,8 +126,6 @@ class QueueMediaPlayer {
   queueShiftFecthAppendBuffer = async (isFirst = false) => {
     if (this.queue.length > 0) {
       const url = this.queue.shift();
-      if (isFirst) console.log(this.sourceBuffer);
-
       const videoFecth = await this.fecthVideo(url);
       this.lastOffset += isFirst ? 0 : videoFecth.duration;
       this.sourceBuffer.timestampOffset = this.lastOffset;

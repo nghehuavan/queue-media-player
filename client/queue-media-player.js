@@ -115,7 +115,7 @@ class QueueMediaPlayer {
       this.waitFecthingInterval = setInterval(async () => {
         clearInterval(this.waitFecthingInterval);
         if (this.fetching) {
-          resolveWith(this.waitForPendingFetching());
+          resolveWith(await this.waitForPendingFetching());
         } else {
           resolveWith(true);
         }

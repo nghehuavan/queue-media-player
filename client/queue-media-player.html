@@ -56,6 +56,8 @@
           <label for="playbackRate">play speed</label>
           <input type="number" placeholder="0.00" id="playbackRate" name="playbackRate" min="0" value="1.0" step="0.1"
             style="width: 86px;" />
+          <br />
+          <button id="playLive">back live</button>
         </div>
       </td>
       <td>
@@ -117,6 +119,10 @@
     // change play speed
     document.querySelector('#playbackRate').onchange = (e) => {
       player.video.playbackRate = parseFloat(e.target.value);
+    }
+
+    document.querySelector('#playLive').onclick = (e) => {
+      player.video.currentTime = 10.2;
     }
 
     // display js memory size

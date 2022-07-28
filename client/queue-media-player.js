@@ -93,21 +93,12 @@ class QueueMediaPlayer {
   seekBackTimeRanges = async (index) => {
     await this.waitForPendingFetching();
     const timeRange = this.timeRanges[index];
+    console.log(timeRange);
 
-    // Rebuild queue from index
-    const reBuildQueue = this.timeRanges.filter((_, idx) => idx >= index).map((i) => i.url);
-    this.queue.unshift(...reBuildQueue);
-
-    // re-calulate totalBufferDuration by index
-    const sumBufferDuration = this.timeRanges
-      .filter((_, idx) => idx < index)
-      .map((i) => i.duration)
-      .reduce((prev, curr) => prev + curr, 0);
-    this.totalBufferDuration = sumBufferDuration;
     const videoFecth = await this.fecthVideo(timeRange.url);
-    this.lastOffset = timeRange.offset;
-    this.sourceBuffer.timestampOffset = this.lastOffset;
+    this.sourceBuffer.timestampOffset = timeRange.offset;
     this.sourceBuffer.appendBuffer(videoFecth.buffer);
+    this.sourceBuffer.timestampOffset = this.lastOffset;
   };
 
   waitForPendingFetching = () => {

@@ -121,8 +121,9 @@
 
     // display js memory size
     setInterval(async function () {
-      if (player?.totalBufferDuration) {
-        document.getElementById('buffer-duration').innerText = "buffered: " + secondsToTime(player?.totalBufferDuration);
+      if (player?.video?.buffered?.length > 0) {
+        document.getElementById('buffer-duration').innerText = "buffered: "
+          + secondsToTime(player?.video?.buffered?.end(0));
       }
 
       if (window.performance.memory) {

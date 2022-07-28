@@ -77,21 +77,11 @@ class QueueMediaPlayer {
     };
 
     this.video.onwaiting = async (e) => {
-      // if (this.video?.buffered?.length <= 0) return;
-      // if (this.queueWaiting || this.networkWaiting) return;
-
-      // console.log('seek back but not have data');
-      // const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
-      // if (index >= 0) {
-      //   this.seekBackTimeRanges(index);
-      // }
-    };
-
-    this.video.onseeked = async (e) => {
+      console.log('this.video.onwaiting');
       if (this.video?.buffered?.length <= 0) return;
       if (this.queueWaiting || this.networkWaiting) return;
 
-      console.log('seek back but not have data');
+      console.log('seek back DVR');
       const index = this.timeRanges.findIndex((i) => i.from <= this.video.currentTime && i.to >= this.video.currentTime);
       if (index >= 0) {
         this.seekBackTimeRanges(index);

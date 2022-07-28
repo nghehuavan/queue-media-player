@@ -77,8 +77,9 @@ class QueueMediaPlayer {
     };
 
     this.video.onwaiting = async (e) => {
-      console.log('this.video.onwaiting');
       if (this.video?.buffered?.length <= 0) return;
+
+      console.log('this.video.onwaiting');
       if (this.queueWaiting || this.networkWaiting) return;
 
       console.log('seek back DVR');

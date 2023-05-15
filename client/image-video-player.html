@@ -9,16 +9,16 @@
 <body>
     <canvas id="video"></canvas>
     <script>
-        const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/frag/'
+        const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/'
         const assets = [];
         for (let index = 0; index < 99; index++) {
-            assets.push(baseURL + index.toString().padStart(3, '0') + '.jpg')
+            assets.push(baseURL + "frame-" + index.toString().padStart(3, '0') + '.jpg')
         }
 
         var canvas = document.getElementById("video");
         function showImagesLikeVideo(index) {
             if (index < assets.length) {
-                canvas.style.background = "url(" + assets[index] + ".jpg)";
+                canvas.style.background = "url(" + assets[index] + ")";
                 //show next image with a timeout
                 setTimeout(showImagesLikeVideo.bind(null, index + 1), 300);
             }

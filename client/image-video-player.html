@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>image video player by nghehuavan</title>
+</head>
+
+<body>
+    <canvas id="video"></canvas>
+    <script>
+        const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/frag/'
+        const assets = [];
+        for (let index = 0; index < 99; index++) {
+            assets.push(baseURL + index.toString().padStart(3, '0') + '.jpg')
+        }
+
+        var canvas = document.getElementById("video");
+        function showImagesLikeVideo(index) {
+            if (index < assets.length) {
+                canvas.style.background = "url(" + assets[index] + ".jpg)";
+                //show next image with a timeout
+                setTimeout(showImagesLikeVideo.bind(null, index + 1), 300);
+            }
+        }
+
+        showImagesLikeVideo(0);
+    </script>
+</body>
+
+</html>

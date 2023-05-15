@@ -11,8 +11,11 @@
     <script>
         const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/'
         const assets = [];
-        for (let index = 0; index < 99; index++) {
-            assets.push(baseURL + "frame-" + index.toString().padStart(3, '0') + '.jpg')
+        for (let index = 1; index < 101; index++) {
+            const im_url = baseURL + "frame-" + index.toString().padStart(3, '0') + '.jpg'
+            let img = new Image();
+            img.src = im_url;
+            assets.push(im_url)
         }
 
         var canvas = document.getElementById("video");
@@ -24,7 +27,8 @@
             }
         }
 
-        showImagesLikeVideo(0);
+        // setTimeout(showImagesLikeVideo(0), 3000);
+        ;
     </script>
 </body>
 

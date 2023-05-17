@@ -7,12 +7,12 @@
 </head>
 
 <body>
-    <canvas id="video"></canvas>
+    <canvas id="video" style="background-size: contain;width: 500px; height: 500px;"></canvas>
     <script>
         const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/'
         const assets = [];
         for (let index = 1; index < 101; index++) {
-            const im_url = baseURL + "frame-" + index.toString().padStart(3, '0') + '.jpg'
+            const im_url = baseURL + index.toString().padStart(4, '0') + '.jpg'
             let img = new Image();
             img.src = im_url;
             assets.push(im_url)
@@ -23,11 +23,11 @@
             if (index < assets.length) {
                 canvas.style.background = "url(" + assets[index] + ")";
                 //show next image with a timeout
-                setTimeout(showImagesLikeVideo.bind(null, index + 1), 300);
+                setTimeout(showImagesLikeVideo.bind(null, index + 1), 50);
             }
         }
 
-        // setTimeout(showImagesLikeVideo(0), 3000);
+        setTimeout(showImagesLikeVideo(0), 3000);
         ;
     </script>
 </body>

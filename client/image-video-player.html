@@ -5,13 +5,20 @@
     <meta charset="utf-8" />
     <title>image video player by nghehuavan</title>
 </head>
+<style>
+    canvas {
+        background-size: 100% 100%;
+        width: 1920px;
+        height: 1080px;
+    }
+</style>
 
 <body>
-    <canvas id="video" style="background-size: contain;width: 500px; height: 500px;"></canvas>
+    <canvas id="video"></canvas>
     <script>
         const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/'
         const assets = [];
-        for (let index = 1; index < 101; index++) {
+        for (let index = 1; index < 301; index++) {
             const im_url = baseURL + index.toString().padStart(4, '0') + '.jpg'
             let img = new Image();
             img.src = im_url;
@@ -27,7 +34,7 @@
             }
         }
 
-        setTimeout(showImagesLikeVideo(0), 3000);
+        setTimeout(showImagesLikeVideo(0), 5000);
         ;
     </script>
 </body>

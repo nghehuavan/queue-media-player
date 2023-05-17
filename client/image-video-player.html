@@ -7,12 +7,12 @@
 </head>
 
 <body>
-    <canvas id="video" width="854" height="480"></canvas>
+    <canvas id="video" width="640" height="480"></canvas>
     <script>
-        const baseURL = 'https://raw.githubusercontent.com/nghehuavan/assets/main/frames/'
+        const baseURL = 'https://raw.githubusercontent.com/nghehuavan/assets/main/glamo/'
         const assets = [];
-        for (let index = 1; index < 19038; index++) {
-            const im_url = baseURL + index.toString().padStart(6, '0') + '.jpg'
+        for (let index = 1; index < 34; index++) {
+            const im_url = baseURL + index.toString().padStart(3, '0') + '.jpg'
             let img = new Image();
             img.src = im_url;
             assets.push(img)
@@ -23,7 +23,7 @@
         function showImagesLikeVideo(index) {
             if (index < assets.length) {
                 context.drawImage(assets[index], 0, 0);
-                setTimeout(showImagesLikeVideo.bind(null, index + 1), 50);
+                setTimeout(showImagesLikeVideo.bind(null, index + 1), 500);
             }
         }
 

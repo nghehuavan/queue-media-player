@@ -5,16 +5,9 @@
     <meta charset="utf-8" />
     <title>image video player by nghehuavan</title>
 </head>
-<style>
-    canvas {
-        background-size: 100% 100%;
-        width: 1920px;
-        height: 1080px;
-    }
-</style>
 
 <body>
-    <canvas id="video"></canvas>
+    <canvas id="video" width="854" height="480"></canvas>
     <script>
         const baseURL = 'https://raw.githubusercontent.com/nghehuavan/queue-media-player/main/client/frames/'
         const assets = [];
@@ -22,14 +15,14 @@
             const im_url = baseURL + index.toString().padStart(4, '0') + '.jpg'
             let img = new Image();
             img.src = im_url;
-            assets.push(im_url)
+            assets.push(img)
         }
 
         var canvas = document.getElementById("video");
+        const context = canvas.getContext('2d');
         function showImagesLikeVideo(index) {
             if (index < assets.length) {
-                canvas.style.background = "url(" + assets[index] + ")";
-                //show next image with a timeout
+                context.drawImage(assets[index], 0, 0);
                 setTimeout(showImagesLikeVideo.bind(null, index + 1), 50);
             }
         }

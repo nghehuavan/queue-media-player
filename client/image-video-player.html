@@ -23,7 +23,7 @@
         function showImagesLikeVideo(index) {
             if (index < assets.length) {
                 context.drawImage(assets[index], 0, 0);
-                setTimeout(showImagesLikeVideo.bind(null, index + 1), 500);
+                setTimeout(showImagesLikeVideo.bind(null, index + 1), 200);
             }
         }
 

@@ -3,19 +3,19 @@
 
 <head>
     <meta charset="utf-8" />
-    <title>image video player by nghehuavan</title>
+    <title>zip images video player by nghehuavan</title>
 </head>
 
 <body>
     <div id="url">https://raw.githubusercontent.com/nghehuavan/assets/main/glamo/sample.zip</div>
-    <button onclick="unzip()">play</button>
+    <button onclick="readFile()">play</button>
     <div> <canvas id="video" width="640" height="480"></canvas></div>
 
     <script type="text/javascript" src="unzip.min.js"></script>
     <script>
         var canvas = document.getElementById("video");
         const context = canvas.getContext('2d');
-        const assets = [];
+        let assets = [];
         function showImagesLikeVideo(index) {
             if (index < assets.length) {
                 context.drawImage(assets[index], 0, 0);
@@ -23,38 +23,30 @@
             }
         }
 
-        const zipUrl = 'https://raw.githubusercontent.com/nghehuavan/assets/main/glamo/sample.zip'
-        const unzip = async () => {
-            const res = await fetch(
-                zipUrl,
-            )
-            const data = await res.arrayBuffer()
+        const readFile = async () => {
+            const zipUrl = 'https://raw.githubusercontent.com/nghehuavan/assets/main/glamo/sample.zip'
+            const response = await fetch(zipUrl)
+            const arrayBuffer = await response.arrayBuffer()
+            const uint8Array = new Uint8Array(arrayBuffer);
+            console.log(uint8Array)
 
-            extractAndPlay(new Blob([data]));
+            var unzip = new Zlib.Unzip(uint8Array);
+            var fileNames = unzip.getFilenames();
+
+            // console.log(fileNames)
+
+            const images = fileNames.map(fileName => {
+                var utf8Array = unzip.decompress(fileName)
+                var base64 = btoa(String.fromCharCode.apply(null, utf8Array));
+                const img = new Image()
+                img.src = "data:image/jpeg;base64," + base64;
+                return img;
+            })
+            assets = [];
+            assets.push(...images)
+
+            setTimeout(showImagesLikeVideo(0), 1000);
         }
-
-        function extractAndPlay(fileBlob) {
-            var zipReader = new FileReader();
-            zipReader.onload = function () {
-                try {
-                    var zipArr = new Uint8Array(zipReader.result);
-                    var unzip = new Zlib.Unzip(zipArr);
-                    var fileNames = unzip.getFilenames();
-                    fileNames.forEach(fileName => {
-                        var utf8Array = unzip.decompress(fileName)
-                        var base64 = btoa(String.fromCharCode.apply(null, utf8Array));
-                        const img = new Image()
-                        img.src = "data:image/jpeg;base64," + base64;
-                        assets.push(img)
-                    });
-
-                    setTimeout(showImagesLikeVideo(0), 5000);
-                } catch (e) {
-                    console.log(e.message);
-                }
-            }
-            zipReader.readAsArrayBuffer(fileBlob);
-        }        
     </script>
 
 </body>

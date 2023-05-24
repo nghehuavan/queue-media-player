@@ -13,12 +13,15 @@
     <table border="1">
         <thead>
             <tr>
-                <td> UnZip + draw canvas => show images as video</td>
                 <td> UnZip + draw canvas + capture canvas => to [video/webm; codecs=vp9])</td>
+                <td> UnZip + draw canvas => show images as video</td>
             </tr>
             <tr>
-                <td> <button onclick="playByConvertToWebM()">playByConvertToVideo</button> status:<span id="status2"></span> </td>
-                <td> <button onclick='playByCanvas()'>playByCanvas</button> status:<span id="status1"></span> </td>
+                <td> <button onclick="playByConvertToWebM()">Play By Capture Canvas To Video</button> </td>
+                <td> <button onclick='playByCanvas()'>Play By Canvas</button></td>
+            </tr>
+            <tr>
+                <td colspan="2" align="center">Status: <b id="status"></b> </td>
             </tr>
         </thead>
         <tbody>
@@ -35,13 +38,17 @@
 
     <script type="text/javascript" src="unzip.min.js"></script>
     <script>
+        var statusEl = document.getElementById("status")
+
         const playByCanvas = async () => {
+            statusEl.innerText = 'downloading ...'
             var ctx = document.getElementById("videoPlayByCanvas").getContext('2d');
             let assets = [];
             const zipUrl = document.getElementById('url').value;
             const response = await fetch(zipUrl)
             const arrayBuffer = await response.arrayBuffer()
             const uint8Array = new Uint8Array(arrayBuffer);
+            statusEl.innerText = 'Unzip ...'
             var unzip = new Zlib.Unzip(uint8Array);
             var fileNames = unzip.getFilenames();
             console.log(fileNames)
@@ -56,7 +63,7 @@
             assets = [];
             assets.push(...images)
             await new Promise((r) => setTimeout(r, 200));
-
+            statusEl.innerText = 'playing by draw on canvas ...'
             for (let index = 0; index < assets.length; index++) {
                 ctx.drawImage(assets[index], 0, 0);
                 // sleep 200ms
@@ -71,7 +78,6 @@
             var mediaRecorder = new MediaRecorder(stream, {
                 mimeType: "video/webm; codecs=vp9"
             });
-            mediaRecorder.start();
             mediaRecorder.ondataavailable = function (event) {
                 recordedChunks.push(event.data);
                 if (mediaRecorder.state === 'recording') {
@@ -85,9 +91,38 @@
                 var video = document.getElementById("videoWebM");
                 video.setAttribute('src', url);
                 video.play()
+                statusEl.innerText = 'playing by HTM5 video tag ...'
             }
 
-            await playByCanvas('hiddenCanvas');
+            statusEl.innerText = 'downloading ...'
+            var ctx = document.getElementById("videoPlayByCanvas").getContext('2d');
+            let assets = [];
+            const zipUrl = document.getElementById('url').value;
+            const response = await fetch(zipUrl)
+            const arrayBuffer = await response.arrayBuffer()
+            const uint8Array = new Uint8Array(arrayBuffer);
+            statusEl.innerText = 'Unzip ...'
+            var unzip = new Zlib.Unzip(uint8Array);
+            var fileNames = unzip.getFilenames();
+            console.log(fileNames)
+            const images = fileNames.map(fileName => {
+                var utf8Array = unzip.decompress(fileName)
+                var base64 = btoa(String.fromCharCode.apply(null, utf8Array));
+                const img = new Image()
+                img.src = "data:image/jpeg;base64," + base64;
+                return img;
+            })
+
+            assets = [];
+            assets.push(...images)
+            mediaRecorder.start();
+            statusEl.innerText = 'recording canvas on right column ...'
+            await new Promise((r) => setTimeout(r, 200));
+            for (let index = 0; index < assets.length; index++) {
+                ctx.drawImage(assets[index], 0, 0);
+                // sleep 200ms
+                await new Promise((r) => setTimeout(r, 200));
+            }
             mediaRecorder.stop();
         }
     </script>

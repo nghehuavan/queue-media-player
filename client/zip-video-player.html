@@ -28,9 +28,15 @@
             <tr>
                 <td>
                     <video id="videoWebM" controls width="640" height="480"></video>
+                    <div style="color: red;">
+                        ✘ video lenght = 5min => you must wait 5min for capture canvas to video
+                    </div>
                 </td>
                 <td>
-                    <canvas id="videoPlayByCanvas" width="640" height="480"></canvas>
+                    <canvas id="videoPlayByCanvas" width="640" height="480" style="background-color: darkgrey;"></canvas>
+                    <div style="color: green;">
+                        ✔ play direct long video without wait
+                    </div>
                 </td>
             </tr>
         </tbody>

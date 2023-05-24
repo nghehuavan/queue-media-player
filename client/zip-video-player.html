@@ -10,33 +10,41 @@
     <input type="text" id="url" value="https://raw.githubusercontent.com/nghehuavan/assets/main/glamo/sample.zip" style="
     width: 500px;">
     <br />
-    <button onclick="readFile()">play</button>
-    <div> <canvas id="video" width="640" height="480"></canvas></div>
+    <table border="1">
+        <thead>
+            <tr>
+                <td> UnZip + draw canvas => show images as video</td>
+                <td> UnZip + draw canvas + capture canvas => to [video/webm; codecs=vp9])</td>
+            </tr>
+            <tr>
+                <td> <button onclick="playByConvertToWebM()">playByConvertToVideo</button> status:<span id="status2"></span> </td>
+                <td> <button onclick='playByCanvas()'>playByCanvas</button> status:<span id="status1"></span> </td>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <video id="videoWebM" controls width="640" height="480"></video>
+                </td>
+                <td>
+                    <canvas id="videoPlayByCanvas" width="640" height="480"></canvas>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 
     <script type="text/javascript" src="unzip.min.js"></script>
     <script>
-        var canvas = document.getElementById("video");
-        const context = canvas.getContext('2d');
-        let assets = [];
-        function showImagesLikeVideo(index) {
-            if (index < assets.length) {
-                context.drawImage(assets[index], 0, 0);
-                setTimeout(showImagesLikeVideo.bind(null, index + 1), 200);
-            }
-        }
-
-        const readFile = async () => {
+        const playByCanvas = async () => {
+            var ctx = document.getElementById("videoPlayByCanvas").getContext('2d');
+            let assets = [];
             const zipUrl = document.getElementById('url').value;
             const response = await fetch(zipUrl)
             const arrayBuffer = await response.arrayBuffer()
             const uint8Array = new Uint8Array(arrayBuffer);
-            console.log(uint8Array)
-
             var unzip = new Zlib.Unzip(uint8Array);
             var fileNames = unzip.getFilenames();
-
-            // console.log(fileNames)
-
+            console.log(fileNames)
             const images = fileNames.map(fileName => {
                 var utf8Array = unzip.decompress(fileName)
                 var base64 = btoa(String.fromCharCode.apply(null, utf8Array));
@@ -44,10 +52,43 @@
                 img.src = "data:image/jpeg;base64," + base64;
                 return img;
             })
+
             assets = [];
             assets.push(...images)
+            await new Promise((r) => setTimeout(r, 200));
 
-            setTimeout(showImagesLikeVideo(0), 1000);
+            for (let index = 0; index < assets.length; index++) {
+                ctx.drawImage(assets[index], 0, 0);
+                // sleep 200ms
+                await new Promise((r) => setTimeout(r, 200));
+            }
+        }
+
+        const playByConvertToWebM = async () => {
+            var canvas = document.getElementById("videoPlayByCanvas");
+            var recordedChunks = [];
+            var stream = canvas.captureStream(25 /*fps*/);
+            var mediaRecorder = new MediaRecorder(stream, {
+                mimeType: "video/webm; codecs=vp9"
+            });
+            mediaRecorder.start();
+            mediaRecorder.ondataavailable = function (event) {
+                recordedChunks.push(event.data);
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
+                }
+            }
+
+            mediaRecorder.onstop = function (event) {
+                var blob = new Blob(recordedChunks, { type: "video/webm" });
+                var url = URL.createObjectURL(blob);
+                var video = document.getElementById("videoWebM");
+                video.setAttribute('src', url);
+                video.play()
+            }
+
+            await playByCanvas('hiddenCanvas');
+            mediaRecorder.stop();
         }
     </script>
 
